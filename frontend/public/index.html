@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Reply Assistant</title>
+<style>
+  :root {
+    --purple: #7c3aed;
+    --purple-dark: #6d28d9;
+    --purple-light: #f5f3ff;
+    --purple-border: #ddd6fe;
+
+    --ink: #1f2333;
+    --ink-soft: #5b6072;
+    --line: #e5e7eb;
+    --bg: #f8f8fb;
+    --white: #ffffff;
+
+    --gray-bg: #e5e7eb;
+    --gray-text: #4b5563;
+
+    --blue-bg: #dbeafe;
+    --blue-text: #1d4ed8;
+
+    --green-bg: #dcfce7;
+    --green-text: #15803d;
+
+    --red-bg: #fee2e2;
+    --red-text: #b91c1c;
+
+    --radius: 12px;
+    --shadow: 0 1px 3px rgba(20, 20, 40, 0.08), 0 1px 2px rgba(20, 20, 40, 0.06);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app-shell {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px 16px 64px;
+  }
+
+  header.top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 4px 20px;
+  }
+
+  .logo-mark {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--purple), #a78bfa);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  header.top h1 {
+    font-size: 19px;
+    margin: 0;
+  }
+
+  header.top .subtitle {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-top: 1px;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 6px;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 5px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+  }
+
+  .tab-btn {
+    flex: 1 1 auto;
+    white-space: nowrap;
+    border: none;
+    background: transparent;
+    padding: 11px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    border-radius: 8px;
+    cursor: pointer;
+    min-height: 44px;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .tab-btn:hover {
+    background: #f2f2f7;
+  }
+
+  .tab-btn.active {
+    background: var(--ink);
+    color: white;
+  }
+
+  .tab-panel {
+    display: none;
+  }
+
+  .tab-panel.active {
+    display: block;
+    animation: fadein 0.15s ease-out;
+  }
+
+  @keyframes fadein {
+    from { opacity: 0; transform: translateY(2px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+  }
+
+  .card + .card {
+    margin-top: 16px;
+  }
+
+  /* Helper / info callout */
+  .info-callout {
+    display: flex;
+    gap: 12px;
+    background: var(--purple-light);
+    border: 1px solid var(--purple-border);
+    border-left: 4px solid var(--purple);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 18px;
+  }
+
+  .info-callout .info-icon {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--purple);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .info-callout h3 {
+    margin: 0 0 4px;
+    font-size: 14px;
+    color: var(--purple-dark);
+  }
+
+  .info-callout p {
+    margin: 0;
+    font-size: 13.5px;
+    color: #4c3f77;
+  }
+
+  /* Forms */
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+
+  .field {
+    margin-bottom: 16px;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  textarea,
+  select {
+    width: 100%;
+    font-family: inherit;
+    font-size: 14.5px;
+    padding: 11px 12px;
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    background: var(--white);
+    color: var(--ink);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    outline: none;
+    border-color: #a9a4bd;
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 90px;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .form-grid .span-2 {
+    grid-column: 1 / -1;
+  }
+
+  @media (max-width: 640px) {
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Buttons */
+  button {
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 11px 20px;
+    font-size: 14.5px;
+    font-weight: 600;
+    border-radius: 9px;
+    border: 1.5px solid transparent;
+    transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+  }
+
+  .btn-primary {
+    background: var(--ink);
+    color: white;
+  }
+  .btn-primary:hover { background: #333750; }
+
+  .btn-ai {
+    background: var(--purple);
+    color: white;
+  }
+  .btn-ai:hover { background: var(--purple-dark); }
+
+  .btn-outline-ai {
+    background: var(--white);
+    color: var(--purple);
+    border-color: var(--purple-border);
+  }
+  .btn-outline-ai:hover { background: var(--purple-light); }
+
+  .btn-secondary {
+    background: var(--white);
+    color: var(--ink);
+    border-color: var(--line);
+  }
+  .btn-secondary:hover { background: #f2f2f7; }
+
+  .btn-success {
+    background: #16a34a;
+    color: white;
+  }
+  .btn-success:hover { background: #128038; }
+
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .btn-block {
+    width: 100%;
+  }
+
+  /* AI badge */
+  .ai-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--purple-light);
+    color: var(--purple-dark);
+    border: 1px solid var(--purple-border);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 3px 9px;
+    border-radius: 999px;
+    text-transform: uppercase;
+  }
+
+  .ai-badge .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--purple);
+  }
+
+  /* Toast */
+  #toast-stack {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    left: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    z-index: 999;
+    pointer-events: none;
+  }
+
+  .toast {
+    pointer-events: auto;
+    max-width: 340px;
+    background: var(--ink);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 9px;
+    font-size: 13.5px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+    animation: toast-in 0.18s ease-out;
+  }
+
+  .toast.success { background: #15803d; }
+  .toast.error { background: #b91c1c; }
+
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Inquiries tab */
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .filter-btn {
+    border: 1.5px solid var(--line);
+    background: var(--white);
+    color: var(--ink-soft);
+    padding: 9px 16px;
+    border-radius: 999px;
+    font-size: 13.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    min-height: 40px;
+  }
+
+  .filter-btn.active {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: white;
+  }
+
+  .inquiry-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .inquiry-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 15px 16px;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+  }
+
+  .inquiry-card:hover {
+    border-color: #cfd0e6;
+    box-shadow: var(--shadow);
+  }
+
+  .inquiry-card:focus-visible {
+    outline: 2px solid var(--purple);
+    outline-offset: 2px;
+  }
+
+  .inquiry-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+
+  .inquiry-sender {
+    font-weight: 700;
+    font-size: 14.5px;
+  }
+
+  .inquiry-date {
+    font-size: 12px;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .inquiry-subject {
+    font-size: 13.5px;
+    color: #383c4d;
+    margin-bottom: 10px;
+  }
+
+  .badge-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    text-transform: capitalize;
+  }
+
+  .badge-category {
+    background: #eef0f5;
+    color: #4b4f63;
+  }
+
+  .badge-status-pending { background: var(--gray-bg); color: var(--gray-text); }
+  .badge-status-drafted { background: var(--blue-bg); color: var(--blue-text); }
+  .badge-status-approved { background: var(--green-bg); color: var(--green-text); }
+
+  .empty-state, .loading-state {
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 14px;
+    padding: 40px 16px;
+  }
+
+  /* Detail view */
+  .detail-back {
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 13.5px;
+    font-weight: 600;
+    padding: 8px 0;
+    margin-bottom: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .detail-back:hover { color: var(--ink); }
+
+  .detail-header {
+    margin-bottom: 14px;
+  }
+
+  .detail-subject {
+    font-size: 19px;
+    font-weight: 700;
+    margin: 4px 0 10px;
+  }
+
+  .detail-meta {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    margin-bottom: 10px;
+  }
+
+  .detail-meta strong { color: var(--ink); }
+
+  .detail-body-block {
+    background: #fafafe;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px;
+    font-size: 14.5px;
+    white-space: pre-wrap;
+    margin-top: 10px;
+    color: #2b2e3d;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--line);
+    margin: 22px 0;
+  }
+
+  .reply-section h3 {
+    font-size: 15px;
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .draft-textarea {
+    width: 100%;
+    min-height: 200px;
+    font-size: 14.5px;
+    padding: 14px;
+    border: 2px solid var(--purple-border);
+    border-radius: 10px;
+    background: var(--purple-light);
+    color: var(--ink);
+    font-family: inherit;
+    line-height: 1.55;
+  }
+
+  .draft-textarea:focus {
+    outline: none;
+    border-color: var(--purple);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+  }
+
+  .draft-textarea[readonly] {
+    background: #fafafe;
+    border-color: var(--line);
+    color: #2b2e3d;
+  }
+
+  .reply-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+
+  .approved-banner {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--green-bg);
+    color: var(--green-text);
+    font-weight: 700;
+    font-size: 13.5px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+  }
+
+  /* Spinner */
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2.5px solid rgba(255,255,255,0.4);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .center-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 30px 0;
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+
+  .center-loading .spinner {
+    border: 2.5px solid var(--purple-border);
+    border-top-color: var(--purple);
+  }
+
+  /* Test tab */
+  .examples-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .example-btn {
+    background: var(--white);
+    border: 1.5px solid var(--purple-border);
+    color: var(--purple-dark);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 999px;
+    min-height: 40px;
+  }
+
+  .example-btn:hover {
+    background: var(--purple-light);
+  }
+
+  .test-note {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0 0 4px;
+  }
+
+  .section-subtitle {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    margin: 0 0 18px;
+  }
+
+  .updated-note {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 10px;
+  }
+
+  @media (max-width: 480px) {
+    .app-shell { padding: 14px 10px 48px; }
+    .card { padding: 16px; }
+    .tab-btn { font-size: 13px; padding: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="toast-stack"></div>
+
+<div class="app-shell">
+
+  <header class="top">
+    <div class="logo-mark">AI</div>
+    <div>
+      <h1>AI Reply Assistant</h1>
+      <div class="subtitle">Draft customer replies in your voice, powered by Claude</div>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="business" type="button">Business Setup</button>
+    <button class="tab-btn" data-tab="inquiries" type="button">Inquiries</button>
+    <button class="tab-btn" data-tab="test" type="button">Test: Submit Inquiry</button>
+  </nav>
+
+  <!-- BUSINESS SETUP TAB -->
+  <section class="tab-panel active" id="tab-business">
+    <div class="info-callout">
+      <div class="info-icon">i</div>
+      <div>
+        <h3>Why this matters</h3>
+        <p>
+          Everything you fill in below — your description, services, tone, and sign-off —
+          is fed directly to the AI every time it drafts a reply. Think of this as the
+          AI's briefing on your business: the more accurate and specific it is, the more
+          on-brand and useful every generated draft will be. Update it any time your
+          business changes.
+        </p>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="section-title">Business Context</p>
+      <p class="section-subtitle">This is used as the AI's system context for every draft it generates.</p>
+
+      <form id="business-form">
+        <div class="form-grid">
+          <div class="field span-2">
+            <label for="biz-name">Business Name</label>
+            <input type="text" id="biz-name" required>
+          </div>
+
+          <div class="field span-2">
+            <label for="biz-description">Description</label>
+            <textarea id="biz-description" rows="3" placeholder="What does your business do, and who do you serve?"></textarea>
+          </div>
+
+          <div class="field span-2">
+            <label for="biz-services">Services</label>
+            <textarea id="biz-services" rows="3" placeholder="List the services, products, or offerings the AI should know about"></textarea>
+          </div>
+
+          <div class="field">
+            <label for="biz-tone">Tone</label>
+            <select id="biz-tone">
+              <option value="professional">Professional</option>
+              <option value="friendly">Friendly</option>
+              <option value="formal">Formal</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="biz-signoff">Sign-off</label>
+            <input type="text" id="biz-signoff" placeholder="e.g. Best regards, The Team">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="business-save-btn">Save</button>
+        <div class="updated-note" id="business-updated-note"></div>
+      </form>
+    </div>
+  </section>
+
+  <!-- INQUIRIES TAB -->
+  <section class="tab-panel" id="tab-inquiries">
+
+    <div id="inquiries-list-view">
+      <div class="filter-row" id="filter-row">
+        <button class="filter-btn active" data-status="all" type="button">All</button>
+        <button class="filter-btn" data-status="pending" type="button">Pending</button>
+        <button class="filter-btn" data-status="drafted" type="button">Drafted</button>
+        <button class="filter-btn" data-status="approved" type="button">Approved</button>
+      </div>
+
+      <div id="inquiries-list-container">
+        <div class="loading-state">Loading inquiries…</div>
+      </div>
+    </div>
+
+    <div id="inquiry-detail-view" style="display:none;">
+      <button class="detail-back" id="detail-back-btn" type="button">&larr; Back to inquiries</button>
+      <div class="card" id="inquiry-detail-content"></div>
+    </div>
+
+  </section>
+
+  <!-- TEST TAB -->
+  <section class="tab-panel" id="tab-test">
+    <div class="card">
+      <p class="section-title">Test: Submit Inquiry</p>
+      <p class="section-subtitle">
+        This is a simulation tool for demoing the pipeline end-to-end — it submits a fake
+        customer inquiry exactly the way a real intake form would, so you can walk through
+        drafting and approving a reply.
+      </p>
+
+      <div class="test-note">Load a realistic example, or write your own below:</div>
+      <div class="examples-row">
+        <button class="example-btn" data-example="pricing" type="button">Use pricing example</button>
+        <button class="example-btn" data-example="availability" type="button">Use availability example</button>
+        <button class="example-btn" data-example="complaint" type="button">Use complaint example</button>
+        <button class="example-btn" data-example="general" type="button">Use general example</button>
+        <button class="example-btn" data-example="damaged" type="button">Use damaged item example</button>
+      </div>
+
+      <form id="test-form">
+        <div class="form-grid">
+          <div class="field">
+            <label for="test-name">Sender Name</label>
+            <input type="text" id="test-name" placeholder="Jane Doe">
+          </div>
+          <div class="field">
+            <label for="test-email">Email</label>
+            <input type="email" id="test-email" placeholder="jane@example.com">
+          </div>
+          <div class="field span-2">
+            <label for="test-subject">Subject</label>
+            <input type="text" id="test-subject" placeholder="What's this about?">
+          </div>
+          <div class="field">
+            <label for="test-category">Category</label>
+            <select id="test-category">
+              <option value="pricing">Pricing</option>
+              <option value="availability">Availability</option>
+              <option value="complaint">Complaint</option>
+              <option value="general" selected>General</option>
+            </select>
+          </div>
+          <div class="field span-2">
+            <label for="test-message">Message</label>
+            <textarea id="test-message" rows="6" placeholder="The customer's message goes here…" required></textarea>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="test-submit-btn">Submit</button>
+      </form>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---------- Utilities ----------
+
+  function $(sel, root) { return (root || document).querySelector(sel); }
+  function $all(sel, root) { return Array.from((root || document).querySelectorAll(sel)); }
+
+  async function apiRequest(url, options) {
+    let res;
+    try {
+      res = await fetch(url, options);
+    } catch (networkErr) {
+      throw new Error('Network error — is the server running?');
+    }
+    let data = null;
+    const text = await res.text();
+    if (text) {
+      try { data = JSON.parse(text); } catch (e) { data = null; }
+    }
+    if (!res.ok) {
+      const message = (data && data.error) ? data.error : ('Request failed (' + res.status + ')');
+      throw new Error(message);
+    }
+    return data;
+  }
+
+  const api = {
+    getBusiness: () => apiRequest('/api/business'),
+    saveBusiness: (payload) => apiRequest('/api/business', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }),
+    getInquiries: (status) => {
+      const qs = (status && status !== 'all') ? ('?status=' + encodeURIComponent(status)) : '';
+      return apiRequest('/api/inquiries' + qs);
+    },
+    getInquiry: (id) => apiRequest('/api/inquiries/' + id),
+    createInquiry: (payload) => apiRequest('/api/inquiries', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }),
+    generateDraft: (id) => apiRequest('/api/inquiries/' + id + '/draft', { method: 'POST' }),
+    approveDraft: (id, edited_draft) => apiRequest('/api/inquiries/' + id + '/approve', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ edited_draft })
+    })
+  };
+
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric',
+      hour: 'numeric', minute: '2-digit'
+    });
+  }
+
+  function showToast(message, type) {
+    const stack = $('#toast-stack');
+    const el = document.createElement('div');
+    el.className = 'toast' + (type ? (' ' + type) : '');
+    el.textContent = message;
+    stack.appendChild(el);
+    setTimeout(() => {
+      el.style.opacity = '0';
+      el.style.transition = 'opacity 0.25s';
+      setTimeout(() => el.remove(), 250);
+    }, 2600);
+  }
+
+  // ---------- Tabs ----------
+
+  function initTabs() {
+    $all('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        $all('.tab-btn').forEach(b => b.classList.remove('active'));
+        $all('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        $('#tab-' + btn.dataset.tab).classList.add('active');
+      });
+    });
+  }
+
+  // ---------- Business Setup ----------
+
+  async function loadBusiness() {
+    try {
+      const biz = await api.getBusiness();
+      $('#biz-name').value = biz.business_name || '';
+      $('#biz-description').value = biz.description || '';
+      $('#biz-services').value = biz.services || '';
+      $('#biz-tone').value = biz.tone || 'professional';
+      $('#biz-signoff').value = biz.sign_off || '';
+      if (biz.updated_at) {
+        $('#business-updated-note').textContent = 'Last updated ' + formatDate(biz.updated_at);
+      }
+    } catch (err) {
+      showToast('Could not load business context: ' + err.message, 'error');
+    }
+  }
+
+  function initBusinessForm() {
+    $('#business-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = $('#business-save-btn');
+      const payload = {
+        business_name: $('#biz-name').value.trim(),
+        description: $('#biz-description').value.trim(),
+        services: $('#biz-services').value.trim(),
+        tone: $('#biz-tone').value,
+        sign_off: $('#biz-signoff').value.trim()
+      };
+      btn.disabled = true;
+      const originalLabel = btn.textContent;
+      btn.textContent = 'Saving…';
+      try {
+        const updated = await api.saveBusiness(payload);
+        showToast('Business context saved', 'success');
+        if (updated && updated.updated_at) {
+          $('#business-updated-note').textContent = 'Last updated ' + formatDate(updated.updated_at);
+        }
+      } catch (err) {
+        showToast('Save failed: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalLabel;
+      }
+    });
+  }
+
+  // ---------- Inquiries list ----------
+
+  let currentFilter = 'all';
+
+  function categoryLabel(cat) {
+    if (!cat) return 'General';
+    return cat.charAt(0).toUpperCase() + cat.slice(1);
+  }
+
+  function statusLabel(status) {
+    if (!status) return 'Pending';
+    return status.charAt(0).toUpperCase() + status.slice(1);
+  }
+
+  function renderInquiryCard(inq) {
+    const div = document.createElement('div');
+    div.className = 'inquiry-card';
+    div.setAttribute('role', 'button');
+    div.setAttribute('tabindex', '0');
+    div.innerHTML =
+      '<div class="inquiry-card-top">' +
+        '<div class="inquiry-sender">' + escapeHtml(inq.sender_name || 'Unknown sender') + '</div>' +
+        '<div class="inquiry-date">' + escapeHtml(formatDate(inq.created_at)) + '</div>' +
+      '</div>' +
+      '<div class="inquiry-subject">' + escapeHtml(inq.subject || '(no subject)') + '</div>' +
+      '<div class="badge-row">' +
+        '<span class="badge badge-category">' + escapeHtml(categoryLabel(inq.category)) + '</span>' +
+        '<span class="badge badge-status-' + escapeHtml(inq.status || 'pending') + '">' + escapeHtml(statusLabel(inq.status)) + '</span>' +
+      '</div>';
+
+    const open = () => openInquiryDetail(inq.id);
+    div.addEventListener('click', open);
+    div.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        open();
+      }
+    });
+    return div;
+  }
+
+  async function loadInquiries(filter) {
+    const container = $('#inquiries-list-container');
+    container.innerHTML = '<div class="loading-state">Loading inquiries…</div>';
+    try {
+      const list = await api.getInquiries(filter);
+      if (!list || list.length === 0) {
+        container.innerHTML = '<div class="empty-state">No inquiries found for this filter.</div>';
+        return;
+      }
+      const wrap = document.createElement('div');
+      wrap.className = 'inquiry-list';
+      list.forEach(inq => wrap.appendChild(renderInquiryCard(inq)));
+      container.innerHTML = '';
+      container.appendChild(wrap);
+    } catch (err) {
+      container.innerHTML = '<div class="empty-state">Could not load inquiries: ' + escapeHtml(err.message) + '</div>';
+    }
+  }
+
+  function initFilters() {
+    $all('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        $all('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.status;
+        loadInquiries(currentFilter);
+      });
+    });
+  }
+
+  // ---------- Inquiry detail ----------
+
+  let currentDetail = null; // { id, sender_name, ..., reply }
+
+  function showListView() {
+    $('#inquiry-detail-view').style.display = 'none';
+    $('#inquiries-list-view').style.display = '';
+    currentDetail = null;
+    loadInquiries(currentFilter);
+  }
+
+  async function openInquiryDetail(id) {
+    $('#inquiries-list-view').style.display = 'none';
+    const detailView = $('#inquiry-detail-view');
+    detailView.style.display = '';
+    const content = $('#inquiry-detail-content');
+    content.innerHTML = '<div class="center-loading"><div class="spinner"></div> Loading inquiry…</div>';
+
+    try {
+      const data = await api.getInquiry(id);
+      currentDetail = data;
+      renderInquiryDetail();
+    } catch (err) {
+      content.innerHTML = '<div class="empty-state">Could not load inquiry: ' + escapeHtml(err.message) + '</div>';
+    }
+  }
+
+  function currentReplyText() {
+    const reply = currentDetail.reply;
+    if (!reply) return '';
+    return (reply.edited_draft !== null && reply.edited_draft !== undefined) ? reply.edited_draft : reply.draft;
+  }
+
+  function renderInquiryDetail() {
+    const inq = currentDetail;
+    const content = $('#inquiry-detail-content');
+
+    let html = '';
+    html += '<div class="detail-header">';
+    html += '<div class="badge-row" style="margin-bottom:10px;">';
+    html += '<span class="badge badge-category">' + escapeHtml(categoryLabel(inq.category)) + '</span>';
+    html += '<span class="badge badge-status-' + escapeHtml(inq.status || 'pending') + '">' + escapeHtml(statusLabel(inq.status)) + '</span>';
+    html += '</div>';
+    html += '<div class="detail-subject">' + escapeHtml(inq.subject || '(no subject)') + '</div>';
+    html += '<div class="detail-meta">';
+    html += '<strong>' + escapeHtml(inq.sender_name || 'Unknown sender') + '</strong>';
+    if (inq.sender_email) html += ' &lt;' + escapeHtml(inq.sender_email) + '&gt;';
+    html += '<br>Received ' + escapeHtml(formatDate(inq.created_at));
+    html += '</div>';
+    html += '<div class="detail-body-block">' + escapeHtml(inq.body) + '</div>';
+    html += '</div>';
+
+    html += '<hr class="divider">';
+
+    html += '<div class="reply-section" id="reply-section">';
+
+    if (!inq.reply) {
+      // No draft yet
+      html += '<h3><span class="ai-badge"><span class="dot"></span>AI</span> Reply</h3>';
+      html += '<p style="color:var(--ink-soft); font-size:14px; margin-bottom:16px;">No draft has been generated for this inquiry yet.</p>';
+      html += '<button class="btn btn-ai" id="generate-draft-btn" type="button">Generate Draft</button>';
+    } else if (inq.status === 'approved') {
+      // Approved: read-only
+      html += '<h3><span class="ai-badge"><span class="dot"></span>AI</span> Reply</h3>';
+      html += '<div class="approved-banner">&#10003; Approved</div>';
+      html += '<textarea class="draft-textarea" readonly>' + escapeHtml(currentReplyText()) + '</textarea>';
+    } else {
+      // Drafted, not yet approved: editable
+      html += '<h3><span class="ai-badge"><span class="dot"></span>AI</span> Draft Reply <span style="font-weight:400; color:var(--ink-soft); font-size:12.5px;">(edit before approving)</span></h3>';
+      html += '<textarea class="draft-textarea" id="draft-textarea">' + escapeHtml(currentReplyText()) + '</textarea>';
+      html += '<div class="reply-actions">';
+      html += '<button class="btn btn-success" id="approve-btn" type="button">Approve</button>';
+      html += '<button class="btn btn-outline-ai" id="regenerate-btn" type="button">Regenerate Draft</button>';
+      html += '</div>';
+    }
+
+    html += '</div>';
+
+    content.innerHTML = html;
+    attachDetailHandlers();
+  }
+
+  function attachDetailHandlers() {
+    const generateBtn = $('#generate-draft-btn');
+    if (generateBtn) {
+      generateBtn.addEventListener('click', () => runGenerateDraft(generateBtn));
+    }
+    const regenerateBtn = $('#regenerate-btn');
+    if (regenerateBtn) {
+      regenerateBtn.addEventListener('click', () => runGenerateDraft(regenerateBtn));
+    }
+    const approveBtn = $('#approve-btn');
+    if (approveBtn) {
+      approveBtn.addEventListener('click', runApprove);
+    }
+  }
+
+  async function runGenerateDraft(btn) {
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Generating…';
+    try {
+      const reply = await api.generateDraft(currentDetail.id);
+      currentDetail.reply = reply;
+      currentDetail.status = 'drafted';
+      showToast('Draft generated', 'success');
+      renderInquiryDetail();
+    } catch (err) {
+      showToast('Could not generate draft: ' + err.message, 'error');
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+    }
+  }
+
+  async function runApprove() {
+    const btn = $('#approve-btn');
+    const textarea = $('#draft-textarea');
+    const editedDraft = textarea ? textarea.value : '';
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Approving…';
+    const regenerateBtn = $('#regenerate-btn');
+    if (regenerateBtn) regenerateBtn.disabled = true;
+    try {
+      const reply = await api.approveDraft(currentDetail.id, editedDraft);
+      currentDetail.reply = reply;
+      currentDetail.status = 'approved';
+      showToast('Reply approved', 'success');
+      renderInquiryDetail();
+    } catch (err) {
+      showToast('Could not approve: ' + err.message, 'error');
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+      if (regenerateBtn) regenerateBtn.disabled = false;
+    }
+  }
+
+  function initDetailBack() {
+    $('#detail-back-btn').addEventListener('click', showListView);
+  }
+
+  // ---------- Test: Submit Inquiry ----------
+
+  const EXAMPLES = {
+    pricing: {
+      sender_name: 'Marcus Bell',
+      sender_email: 'marcus.bell82@gmail.com',
+      subject: 'Question about pricing for a small event',
+      category: 'pricing',
+      body: "Hi there, I'm planning a birthday get-together for about 25 people in the backyard next month and I'm trying to figure out what it would cost to have you cater it. Do you have set packages, or is everything quoted per person? Also wondering if there's a difference in price for weekday vs. weekend bookings. Thanks so much!"
+    },
+    availability: {
+      sender_name: 'Priya Nandakumar',
+      sender_email: 'priya.nandakumar@outlook.com',
+      subject: 'Do you have any openings this Saturday?',
+      category: 'availability',
+      body: "Hello! I've been meaning to book an appointment for weeks now and finally have a free weekend. Is there any chance you have an opening this Saturday, ideally sometime in the morning? I can be flexible on time if afternoons work better on your end. Also, how far in advance do you usually recommend booking to avoid this last-minute scramble in the future? Thank you!"
+    },
+    complaint: {
+      sender_name: 'Diane Whitfield',
+      sender_email: 'd.whitfield55@yahoo.com',
+      subject: 'Disappointed with my visit yesterday',
+      category: 'complaint',
+      body: "I've been a customer for almost two years and yesterday was honestly the first time I left feeling frustrated. I waited almost 40 minutes past my scheduled time with no update from anyone at the front, and when I asked, I felt like I was brushed off. I understand things get busy, but a little communication would have gone a long way. I'd really like to know how this is normally handled and whether there's anything that can be done, because I'd hate for this to keep me from coming back."
+    },
+    general: {
+      sender_name: 'Tom Alvarez',
+      sender_email: 'talvarez.home@gmail.com',
+      subject: 'Quick question about your hours',
+      category: 'general',
+      body: "Hi, I drove by your shop last weekend and it looked closed, but I wasn't sure if that was just for the holiday or if your hours changed. Could you let me know your current hours, especially on Sundays? I'd like to stop by sometime soon. Thanks!"
+    },
+    damaged: {
+      sender_name: 'Rachel Kim',
+      sender_email: 'rachel.kim0210@gmail.com',
+      subject: 'Item arrived damaged - order #4471',
+      category: 'complaint',
+      body: "Hi, my order (#4471) arrived yesterday and unfortunately the box was pretty banged up in shipping — one of the pieces inside had a visible crack. I still love what I could see of it and would rather get it fixed or replaced than return the whole order if that's an option. Could you let me know what the process looks like from here? I can send photos if that's helpful."
+    }
+  };
+
+  function initExamples() {
+    $all('.example-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const ex = EXAMPLES[btn.dataset.example];
+        if (!ex) return;
+        $('#test-name').value = ex.sender_name;
+        $('#test-email').value = ex.sender_email;
+        $('#test-subject').value = ex.subject;
+        $('#test-category').value = ex.category;
+        $('#test-message').value = ex.body;
+        showToast('Example loaded — feel free to tweak it before submitting', 'success');
+      });
+    });
+  }
+
+  function initTestForm() {
+    $('#test-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = $('#test-submit-btn');
+      const payload = {
+        sender_name: $('#test-name').value.trim(),
+        sender_email: $('#test-email').value.trim(),
+        subject: $('#test-subject').value.trim(),
+        category: $('#test-category').value,
+        body: $('#test-message').value.trim()
+      };
+      if (!payload.body) {
+        showToast('Message is required', 'error');
+        return;
+      }
+      btn.disabled = true;
+      const originalLabel = btn.textContent;
+      btn.textContent = 'Submitting…';
+      try {
+        const created = await api.createInquiry(payload);
+        showToast('Inquiry submitted (#' + created.id + ') — check the Inquiries tab', 'success');
+        $('#test-form').reset();
+        $('#test-category').value = 'general';
+        if (currentFilter) loadInquiries(currentFilter);
+      } catch (err) {
+        showToast('Submit failed: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalLabel;
+      }
+    });
+  }
+
+  // ---------- Init ----------
+
+  document.addEventListener('DOMContentLoaded', () => {
+    initTabs();
+    initBusinessForm();
+    initFilters();
+    initDetailBack();
+    initExamples();
+    initTestForm();
+
+    loadBusiness();
+    loadInquiries(currentFilter);
+  });
+})();
+</script>
+
+</body>
+</html>
