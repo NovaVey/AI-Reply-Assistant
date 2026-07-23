@@ -302,6 +302,63 @@
   }
   .btn-danger:hover { background: var(--red-bg); }
 
+  .btn-solid-danger {
+    background: var(--red-text);
+    color: white;
+  }
+  .btn-solid-danger:hover { background: #991b1b; }
+
+  /* Confirmation modal (replaces native confirm() so it can be styled/screenshotted) */
+  .confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 17, 30, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    animation: overlay-in 0.15s ease-out;
+  }
+
+  @keyframes overlay-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .confirm-modal {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow), 0 20px 40px rgba(15, 17, 30, 0.25);
+    padding: 24px;
+    max-width: 380px;
+    width: 100%;
+  }
+
+  .confirm-modal h3 {
+    margin: 0 0 10px;
+    font-size: 17px;
+    color: var(--ink);
+  }
+
+  .confirm-modal p {
+    margin: 0 0 20px;
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+
+  .confirm-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .confirm-modal-actions .btn {
+    min-height: 40px;
+    padding: 9px 18px;
+  }
+
   .btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -709,6 +766,17 @@
 
 <div id="toast-stack"></div>
 
+<div id="confirm-modal-overlay" class="confirm-overlay" style="display:none;">
+  <div class="confirm-modal">
+    <h3 id="confirm-modal-title">Are you sure?</h3>
+    <p id="confirm-modal-message"></p>
+    <div class="confirm-modal-actions">
+      <button id="confirm-modal-cancel" class="btn btn-secondary" type="button">Cancel</button>
+      <button id="confirm-modal-confirm" class="btn btn-solid-danger" type="button">Delete</button>
+    </div>
+  </div>
+</div>
+
 <div class="app-shell">
 
   <header class="top">
@@ -938,6 +1006,41 @@
     });
   }
 
+  function showConfirmModal(message, opts) {
+    opts = opts || {};
+    const overlay = $('#confirm-modal-overlay');
+    const titleEl = $('#confirm-modal-title');
+    const msgEl = $('#confirm-modal-message');
+    const cancelBtn = $('#confirm-modal-cancel');
+    const confirmBtn = $('#confirm-modal-confirm');
+
+    titleEl.textContent = opts.title || 'Are you sure?';
+    msgEl.textContent = message;
+    confirmBtn.textContent = opts.confirmLabel || 'Delete';
+
+    overlay.style.display = 'flex';
+
+    return new Promise((resolve) => {
+      function cleanup(result) {
+        overlay.style.display = 'none';
+        cancelBtn.removeEventListener('click', onCancel);
+        confirmBtn.removeEventListener('click', onConfirm);
+        overlay.removeEventListener('click', onOverlayClick);
+        document.removeEventListener('keydown', onKeydown);
+        resolve(result);
+      }
+      function onCancel() { cleanup(false); }
+      function onConfirm() { cleanup(true); }
+      function onOverlayClick(e) { if (e.target === overlay) cleanup(false); }
+      function onKeydown(e) { if (e.key === 'Escape') cleanup(false); }
+
+      cancelBtn.addEventListener('click', onCancel);
+      confirmBtn.addEventListener('click', onConfirm);
+      overlay.addEventListener('click', onOverlayClick);
+      document.addEventListener('keydown', onKeydown);
+    });
+  }
+
   function showToast(message, type) {
     const stack = $('#toast-stack');
     const el = document.createElement('div');
@@ -1064,7 +1167,11 @@
   }
 
   async function runDeleteInquiryCard(id, cardEl, btn) {
-    if (!confirm('Delete this inquiry? This cannot be undone.')) return;
+    const ok = await showConfirmModal('Delete this inquiry? This cannot be undone.', {
+      title: 'Delete Inquiry',
+      confirmLabel: 'Delete'
+    });
+    if (!ok) return;
     btn.disabled = true;
     try {
       await api.deleteInquiry(id);
@@ -1258,7 +1365,11 @@
 
   async function runDeleteInquiryDetail() {
     if (!currentDetail) return;
-    if (!confirm('Delete this inquiry? This cannot be undone.')) return;
+    const ok = await showConfirmModal('Delete this inquiry? This cannot be undone.', {
+      title: 'Delete Inquiry',
+      confirmLabel: 'Delete'
+    });
+    if (!ok) return;
     const btn = $('#delete-inquiry-btn');
     btn.disabled = true;
     try {
