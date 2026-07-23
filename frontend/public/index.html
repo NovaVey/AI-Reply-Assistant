@@ -28,6 +28,7 @@
 
     --red-bg: #fee2e2;
     --red-text: #b91c1c;
+    --red-border: #fecaca;
 
     --radius: 12px;
     --shadow: 0 1px 3px rgba(20, 20, 40, 0.08), 0 1px 2px rgba(20, 20, 40, 0.06);
@@ -294,6 +295,13 @@
   }
   .btn-success:hover { background: #128038; }
 
+  .btn-danger {
+    background: var(--white);
+    color: var(--red-text);
+    border-color: var(--red-border);
+  }
+  .btn-danger:hover { background: var(--red-bg); }
+
   .btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -420,6 +428,13 @@
     margin-bottom: 6px;
   }
 
+  .inquiry-card-top-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
   .inquiry-sender {
     font-weight: 700;
     font-size: 14.5px;
@@ -430,6 +445,32 @@
     color: var(--ink-soft);
     white-space: nowrap;
     flex-shrink: 0;
+  }
+
+  .btn-delete-card {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    border: 1.5px solid var(--red-border);
+    background: var(--white);
+    color: var(--red-text);
+    border-radius: 7px;
+    font-size: 13px;
+    line-height: 1;
+    padding: 0;
+    transition: background 0.15s, border-color 0.15s;
+  }
+
+  .btn-delete-card:hover {
+    background: var(--red-bg);
+  }
+
+  .btn-delete-card:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 
   .inquiry-subject {
@@ -483,6 +524,14 @@
     gap: 6px;
   }
   .detail-back:hover { color: var(--ink); }
+
+  .detail-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
 
   .detail-header {
     margin-bottom: 14px;
@@ -672,8 +721,8 @@
 
   <nav class="tabs">
     <button class="tab-btn active" data-tab="business" type="button">Business Setup</button>
-    <button class="tab-btn" data-tab="inquiries" type="button">Inquiries</button>
     <button class="tab-btn" data-tab="test" type="button">Test: Submit Inquiry</button>
+    <button class="tab-btn" data-tab="inquiries" type="button">Inquiries</button>
   </nav>
 
   <!-- BUSINESS SETUP TAB -->
@@ -734,29 +783,6 @@
     </div>
   </section>
 
-  <!-- INQUIRIES TAB -->
-  <section class="tab-panel" id="tab-inquiries">
-
-    <div id="inquiries-list-view">
-      <div class="filter-row" id="filter-row">
-        <button class="filter-btn active" data-status="all" type="button">All</button>
-        <button class="filter-btn" data-status="pending" type="button">Pending</button>
-        <button class="filter-btn" data-status="drafted" type="button">Drafted</button>
-        <button class="filter-btn" data-status="approved" type="button">Approved</button>
-      </div>
-
-      <div id="inquiries-list-container">
-        <div class="loading-state">Loading inquiries…</div>
-      </div>
-    </div>
-
-    <div id="inquiry-detail-view" style="display:none;">
-      <button class="detail-back" id="detail-back-btn" type="button">&larr; Back to inquiries</button>
-      <div class="card" id="inquiry-detail-content"></div>
-    </div>
-
-  </section>
-
   <!-- TEST TAB -->
   <section class="tab-panel" id="tab-test">
     <div class="card">
@@ -808,6 +834,32 @@
         <button type="submit" class="btn btn-primary" id="test-submit-btn">Submit</button>
       </form>
     </div>
+  </section>
+
+  <!-- INQUIRIES TAB -->
+  <section class="tab-panel" id="tab-inquiries">
+
+    <div id="inquiries-list-view">
+      <div class="filter-row" id="filter-row">
+        <button class="filter-btn active" data-status="all" type="button">All</button>
+        <button class="filter-btn" data-status="pending" type="button">Pending</button>
+        <button class="filter-btn" data-status="drafted" type="button">Drafted</button>
+        <button class="filter-btn" data-status="approved" type="button">Approved</button>
+      </div>
+
+      <div id="inquiries-list-container">
+        <div class="loading-state">Loading inquiries…</div>
+      </div>
+    </div>
+
+    <div id="inquiry-detail-view" style="display:none;">
+      <div class="detail-toolbar">
+        <button class="detail-back" id="detail-back-btn" type="button">&larr; Back to inquiries</button>
+        <button class="btn btn-danger" id="delete-inquiry-btn" type="button">Delete Inquiry</button>
+      </div>
+      <div class="card" id="inquiry-detail-content"></div>
+    </div>
+
   </section>
 
 </div>
@@ -862,7 +914,8 @@
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ edited_draft })
-    })
+    }),
+    deleteInquiry: (id) => apiRequest('/api/inquiries/' + id, { method: 'DELETE' })
   };
 
   function escapeHtml(str) {
@@ -980,7 +1033,10 @@
     div.innerHTML =
       '<div class="inquiry-card-top">' +
         '<div class="inquiry-sender">' + escapeHtml(inq.sender_name || 'Unknown sender') + '</div>' +
-        '<div class="inquiry-date">' + escapeHtml(formatDate(inq.created_at)) + '</div>' +
+        '<div class="inquiry-card-top-right">' +
+          '<div class="inquiry-date">' + escapeHtml(formatDate(inq.created_at)) + '</div>' +
+          '<button class="btn-delete-card" data-id="' + escapeHtml(inq.id) + '" type="button" aria-label="Delete inquiry" title="Delete inquiry">&#10005;</button>' +
+        '</div>' +
       '</div>' +
       '<div class="inquiry-subject">' + escapeHtml(inq.subject || '(no subject)') + '</div>' +
       '<div class="badge-row">' +
@@ -996,7 +1052,33 @@
         open();
       }
     });
+
+    const deleteBtn = $('.btn-delete-card', div);
+    deleteBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      runDeleteInquiryCard(inq.id, div, deleteBtn);
+    });
+
     return div;
+  }
+
+  async function runDeleteInquiryCard(id, cardEl, btn) {
+    if (!confirm('Delete this inquiry? This cannot be undone.')) return;
+    btn.disabled = true;
+    try {
+      await api.deleteInquiry(id);
+      cardEl.remove();
+      showToast('Inquiry deleted', 'success');
+      const container = $('#inquiries-list-container');
+      const list = $('.inquiry-list', container);
+      if (list && list.children.length === 0) {
+        container.innerHTML = '<div class="empty-state">No inquiries found for this filter.</div>';
+      }
+    } catch (err) {
+      showToast('Could not delete inquiry: ' + err.message, 'error');
+      btn.disabled = false;
+    }
   }
 
   async function loadInquiries(filter) {
@@ -1170,6 +1252,25 @@
     $('#detail-back-btn').addEventListener('click', showListView);
   }
 
+  function initDetailDelete() {
+    $('#delete-inquiry-btn').addEventListener('click', runDeleteInquiryDetail);
+  }
+
+  async function runDeleteInquiryDetail() {
+    if (!currentDetail) return;
+    if (!confirm('Delete this inquiry? This cannot be undone.')) return;
+    const btn = $('#delete-inquiry-btn');
+    btn.disabled = true;
+    try {
+      await api.deleteInquiry(currentDetail.id);
+      showToast('Inquiry deleted', 'success');
+      showListView();
+    } catch (err) {
+      showToast('Could not delete inquiry: ' + err.message, 'error');
+      btn.disabled = false;
+    }
+  }
+
   // ---------- Test: Submit Inquiry ----------
 
   const EXAMPLES = {
@@ -1265,6 +1366,7 @@
     initBusinessForm();
     initFilters();
     initDetailBack();
+    initDetailDelete();
     initExamples();
     initTestForm();
 

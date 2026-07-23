@@ -174,4 +174,24 @@ router.patch('/:id/approve', async (req, res) => {
   }
 });
 
+// DELETE /api/inquiries/:id -> delete an inquiry (cascades to its reply, if any)
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deleteResult = await pool.query(
+      'DELETE FROM inquiries WHERE id = $1 RETURNING id',
+      [id]
+    );
+
+    if (deleteResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Inquiry not found' });
+    }
+
+    res.status(200).json({ deleted: true, id: deleteResult.rows[0].id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

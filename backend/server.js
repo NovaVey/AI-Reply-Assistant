@@ -17,6 +17,14 @@ app.use(express.static(path.join(__dirname, '../frontend/public')));
 app.use('/api/inquiries', require('./routes/inquiries'));
 app.use('/api/business', require('./routes/business'));
 
-app.listen(PORT, () => {
-  console.log(`AI Reply Assistant server listening on port ${PORT}`);
-});
+// Only start listening when this file is run directly (e.g. `node backend/server.js`
+// or `npm start`/`npm run dev`). When it's required from elsewhere (e.g. the test
+// suite, via supertest), the caller gets the configured `app` without an extra
+// server already bound to PORT.
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`AI Reply Assistant server listening on port ${PORT}`);
+  });
+}
+
+module.exports = app;
