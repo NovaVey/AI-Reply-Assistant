@@ -98,6 +98,39 @@ simple pending → drafted → approved status pipeline.
 | `POST` | `/api/inquiries` | Submit a new inquiry. |
 | `POST` | `/api/inquiries/:id/draft` | Generate (or regenerate) an AI draft reply for an inquiry. |
 | `PATCH` | `/api/inquiries/:id/approve` | Save the final edited reply text and mark the inquiry approved. |
+| `DELETE` | `/api/inquiries/:id` | Delete an inquiry (and its reply, if any). |
+
+## Testing
+
+The backend has a real, runnable integration test suite (`tests/`) that exercises the full Express
+app in-process against a real PostgreSQL database, using Node's built-in test runner
+(`node --test`), [supertest](https://github.com/ladjs/supertest) for HTTP assertions, and
+[nock](https://github.com/nock/nock) to intercept and mock the Claude API — no real network call to
+Anthropic is ever made.
+
+1. **Install dependencies** (if you haven't already)
+
+   ```bash
+   npm install
+   ```
+
+2. **Create a test database**
+
+   Tests run against their own local PostgreSQL database, separate from your dev database:
+
+   ```bash
+   createdb ai_reply_assistant_test
+   ```
+
+3. **Run the tests**, pointing `DATABASE_URL` at that database:
+
+   ```bash
+   DATABASE_URL=postgresql://postgres@localhost:5432/ai_reply_assistant_test npm test
+   ```
+
+   The suite applies `backend/db/schema.sql` and resets its tables between tests automatically, so
+   no separate `db:init` step is needed for the test database. You do **not** need an
+   `ANTHROPIC_API_KEY` to run the tests — the Claude API is fully mocked with `nock`.
 
 ## Project Structure
 
