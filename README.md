@@ -8,6 +8,43 @@ preferred tone, and your sign-off — so every draft sounds like it came from yo
 edit, and approve each draft before it's considered final, and every inquiry is tracked through a
 simple pending → drafted → approved status pipeline.
 
+## Demo
+
+<video src="docs/demo/ai-reply-assistant-demo.mp4" controls width="800">
+  Your browser doesn't support inline video — <a href="docs/demo/ai-reply-assistant-demo.mp4">download the demo video</a> instead.
+</video>
+
+Full walkthrough: setting up the business profile, submitting inquiries (via one-click examples and
+by hand), generating/editing/approving AI drafts, and deleting inquiries via both entry points.
+
+<table>
+<tr>
+<td width="33%"><img src="docs/demo/screenshots/01-business-setup-filled.png" width="100%"><br><sub>Business Setup — filled in</sub></td>
+<td width="33%"><img src="docs/demo/screenshots/03-test-submit-inquiry-examples.png" width="100%"><br><sub>Test: Submit Inquiry — examples</sub></td>
+<td width="33%"><img src="docs/demo/screenshots/04-test-submit-inquiry-hand-typed.png" width="100%"><br><sub>Submitting a hand-written inquiry</sub></td>
+</tr>
+<tr>
+<td width="33%"><img src="docs/demo/screenshots/05-inquiries-list.png" width="100%"><br><sub>Inquiries list</sub></td>
+<td width="33%"><img src="docs/demo/screenshots/06-inquiries-detail-pending.png" width="100%"><br><sub>Inquiry detail — pending</sub></td>
+<td width="33%"><img src="docs/demo/screenshots/07-inquiries-ai-draft-generated.png" width="100%"><br><sub>AI draft generated (editable)</sub></td>
+</tr>
+<tr>
+<td width="33%"><img src="docs/demo/screenshots/08-inquiries-draft-approved.png" width="100%"><br><sub>Draft approved</sub></td>
+<td width="33%"><img src="docs/demo/screenshots/09-inquiries-custom-inquiry-draft.png" width="100%"><br><sub>Draft for a hand-written inquiry</sub></td>
+<td width="33%"><img src="docs/demo/screenshots/10-inquiries-list-mixed-statuses.png" width="100%"><br><sub>List with mixed statuses</sub></td>
+</tr>
+<tr>
+<td width="33%"><img src="docs/demo/screenshots/11-inquiries-delete-confirmation-modal.png" width="100%"><br><sub>Delete confirmation (card)</sub></td>
+<td width="33%"><img src="docs/demo/screenshots/12-inquiries-after-delete.png" width="100%"><br><sub>After deleting</sub></td>
+<td width="33%"><img src="docs/demo/screenshots/13-inquiries-delete-confirmation-detail-view.png" width="100%"><br><sub>Delete confirmation (detail view)</sub></td>
+</tr>
+<tr>
+<td width="33%"><img src="docs/demo/screenshots/14-inquiries-final-state.png" width="100%"><br><sub>Final populated state</sub></td>
+<td width="33%"></td>
+<td width="33%"></td>
+</tr>
+</table>
+
 ## Features
 
 - **Business context personalization** — a single settings screen where you describe your business,
@@ -20,6 +57,8 @@ simple pending → drafted → approved status pipeline.
   stored.
 - **Status tracking** — every inquiry moves through `pending` → `drafted` → `approved`, with clear,
   color-coded status badges in the UI.
+- **Delete inquiries** — remove an inquiry (and its reply, if any) from either the inquiry card or
+  the detail view, with a styled confirmation step before anything is deleted for good.
 - **Demo example-inquiry buttons** — a "Test: Submit Inquiry" tab with one-click example buttons
   that fill in realistic sample customer messages (pricing, availability, complaints, general
   questions), so you can try the full flow without writing your own test data.
@@ -149,6 +188,12 @@ AI-Reply-Assistant/
 ├── frontend/
 │   └── public/
 │       └── index.html         # Single-page vanilla HTML/CSS/JS frontend
+├── tests/
+│   ├── helpers/testEnv.js     # Shared test setup/teardown
+│   ├── business.test.js       # /api/business integration tests
+│   └── inquiries.test.js      # /api/inquiries integration tests
+├── docs/
+│   └── demo/                  # Demo video + screenshots used in this README
 ├── .env.example
 ├── package.json
 ├── README.md
